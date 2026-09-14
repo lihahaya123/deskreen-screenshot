@@ -6,18 +6,12 @@ import { handleRecieveEncryptedMessage } from '../../utils/handleRecieveEncrypte
 import handleSelfDestroy from './handleSelfDestroy';
 import NullUser from './NullUser';
 import NullSimplePeer from './NullSimplePeer';
-import setDisplaySizeFromLocalStream from './handleSetDisplaySizeFromLocalStream';
-import DesktopCapturerSourceType from '../../../../common/DesktopCapturerSourceType';
 import getAppLanguage from '../../../../common/getAppLanguage';
-import { IpcEvents } from '../../../../common/IpcEvents.enum';
-import getDesktopSourceStreamBySourceID from './getDesktopSourceStreamBySourceID';
 
 import { Device } from '../../../../common/Device';
 import { LocalPeerUser } from '../../../../common/LocalPeerUser';
 import type { SendEncryptedMessagePayload } from '../../../../common/SendEncryptedMessagePayload';
 import { Socket } from 'socket.io-client';
-
-type DisplaySize = { width: number; height: number };
 
 export interface PartnerPeerUser {
 	username: string;
@@ -31,7 +25,6 @@ export default class PeerConnection {
 	partner: PartnerPeerUser;
 	peer = NullSimplePeer;
 	desktopCapturerSourceID: string;
-	localStream: MediaStream | null;
 	isSocketRoomLocked: boolean;
 	partnerDeviceDetails = {
 		id: '',
@@ -46,8 +39,6 @@ export default class PeerConnection {
 	signalsDataToCallUser: string[];
 	isCallStarted: boolean;
 	onDeviceConnectedCallback: (device: Device) => void;
-	displayID: string;
-	sourceDisplaySize: DisplaySize | undefined;
 	beforeunloadHandler: (() => void) | null = null;
 
 	constructor(
@@ -65,9 +56,6 @@ export default class PeerConnection {
 		this.desktopCapturerSourceID = '';
 		this.signalsDataToCallUser = [];
 		this.isCallStarted = false;
-		this.localStream = null;
-		this.displayID = '';
-		this.sourceDisplaySize = undefined;
 		this.onDeviceConnectedCallback = () => {
 			// noop until UI layer registers callback
 		};
@@ -95,120 +83,7 @@ export default class PeerConnection {
 		this.desktopCapturerSourceID = id;
 		if (import.meta.env.MODE === 'test') return;
 
-		this.sourceDisplaySize = undefined;
-		this.displayID = '';
 		await this.createPeer();
-	}
-
-	async setDisplayIDByDesktopCapturerSourceID(): Promise<void> {
-		if (
-			!this.desktopCapturerSourceID.includes(DesktopCapturerSourceType.SCREEN)
-		) {
-			// clear display size for window sources
-			this.sourceDisplaySize = undefined;
-			return;
-		}
-
-		this.displayID = await window.electron.ipcRenderer.invoke(
-			IpcEvents.GetSourceDisplayIDByDesktopCapturerSourceID,
-			this.desktopCapturerSourceID,
-		);
-
-		if (this.displayID !== '') {
-			// await to ensure sourceDisplaySize is set before creating stream
-			await this.setDisplaySizeRetreivedFromMainProcess();
-		}
-	}
-
-	async setDisplaySizeRetreivedFromMainProcess(): Promise<void> {
-		const size: DisplaySize | 'undefined' =
-			await window.electron.ipcRenderer.invoke(
-				'get-display-size-by-display-id',
-				this.displayID,
-			);
-		if (size !== 'undefined') {
-			this.sourceDisplaySize = size;
-		}
-	}
-
-	async handleCreatePeerAfterDesktopCapturerSourceIDWasSet(): Promise<void> {
-		// if peer already exists, replace the track instead of creating a new peer
-		if (this.peer !== NullSimplePeer && this.localStream) {
-			try {
-				const oldTrack = this.localStream.getVideoTracks()[0];
-				if (!oldTrack) {
-					await this.createPeer();
-					if (!this.sourceDisplaySize) {
-						setDisplaySizeFromLocalStream(this);
-					}
-					return;
-				}
-
-				const newStream = await getDesktopSourceStreamBySourceID(
-					this.desktopCapturerSourceID,
-					this.sourceDisplaySize?.width,
-					this.sourceDisplaySize?.height,
-					0.5,
-					1,
-				);
-				const newVideoTrack = newStream.getVideoTracks()[0];
-
-				if (!newVideoTrack) {
-					await this.createPeer();
-					if (!this.sourceDisplaySize) {
-						setDisplaySizeFromLocalStream(this);
-					}
-					return;
-				}
-
-				// store reference to old stream before replacement
-				const oldStream = this.localStream;
-
-				// replace the track in the existing peer
-				// replaceTrack will add the new track to the old stream
-				await this.peer.replaceTrack(oldTrack, newVideoTrack, oldStream);
-
-				// stop only the old track (it's already removed from the stream by replaceTrack)
-				oldTrack.stop();
-
-				// stop any remaining tracks in the old stream (should be none, but just in case)
-				// but don't stop the new track that was just added by replaceTrack
-				oldStream.getTracks().forEach((track) => {
-					if (track.id !== newVideoTrack.id) {
-						track.stop();
-					}
-				});
-
-				// update local stream reference to the new stream
-				// the new stream's track is now being used in the peer connection
-				this.localStream = newStream;
-
-				// update sourceDisplaySize from actual stream to ensure correct resolution
-				// this is critical when switching sources to get the actual stream dimensions
-				if (
-					this.desktopCapturerSourceID.includes(
-						DesktopCapturerSourceType.SCREEN,
-					)
-				) {
-					setDisplaySizeFromLocalStream(this);
-				} else {
-					// clear for window sources
-					this.sourceDisplaySize = undefined;
-				}
-			} catch (error) {
-				console.error('Failed to replace stream track:', error);
-				// fallback to creating a new peer if replacement fails
-				await this.createPeer();
-				if (!this.sourceDisplaySize) {
-					setDisplaySizeFromLocalStream(this);
-				}
-			}
-		} else {
-			await this.createPeer();
-			if (!this.sourceDisplaySize) {
-				setDisplaySizeFromLocalStream(this);
-			}
-		}
 	}
 
 	setOnDeviceConnectedCallback(callback: (device: Device) => void): void {

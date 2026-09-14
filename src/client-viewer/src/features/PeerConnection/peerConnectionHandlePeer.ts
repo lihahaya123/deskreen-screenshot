@@ -19,7 +19,7 @@ export default (peerConnection: PeerConnection) => {
 	}
 	peerConnection.peer.on('connect', () => {
 		peerConnection.setSnapshotReadyCallback(true);
-		peerConnection.isStreamStarted = true;
+		peerConnection.isPeerConnected = true;
 		getSharingShourceType(peerConnection);
 
 		try {

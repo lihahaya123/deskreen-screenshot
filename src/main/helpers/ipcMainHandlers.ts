@@ -1,8 +1,6 @@
 import {
-	Display,
 	ipcMain,
 	BrowserWindow,
-	screen,
 	clipboard,
 	shell,
 	app,
@@ -39,21 +37,6 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 	ipcMain.handle('get-signaling-server-port', () => {
 		if (mainWindow === null) return;
 		mainWindow.webContents.send('sending-port-from-main', signalingServer.port);
-	});
-
-	ipcMain.handle('get-all-displays', () => {
-		return screen.getAllDisplays();
-	});
-
-	ipcMain.handle('get-display-size-by-display-id', (_, displayID: string) => {
-		const display = screen.getAllDisplays().find((d: Display) => {
-			return `${d.id}` === displayID;
-		});
-
-		if (display) {
-			return display.size;
-		}
-		return undefined;
 	});
 
 	ipcMain.handle(IpcEvents.GetIsLinuxWaylandSession, () => {
@@ -232,15 +215,6 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 			sharingSession?.setStatus(SharingSessionStatusEnum.CONNECTED);
 		}
 	});
-
-	ipcMain.handle(
-		IpcEvents.GetSourceDisplayIDByDesktopCapturerSourceID,
-		(_, sourceId) => {
-			return getDeskreenGlobal().desktopCapturerSourcesService.getSourceDisplayIDByDisplayCapturerSourceID(
-				sourceId,
-			);
-		},
-	);
 
 	ipcMain.handle(
 		IpcEvents.DisconnectPeerAndDestroySharingSessionBySessionID,

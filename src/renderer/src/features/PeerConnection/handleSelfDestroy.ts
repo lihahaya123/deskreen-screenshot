@@ -32,14 +32,6 @@ export default function handleSelfDestroy(
 		peerConnection.peer = NullSimplePeer;
 	}
 
-	// cleanup media stream
-	if (peerConnection.localStream) {
-		peerConnection.localStream.getTracks().forEach((track) => {
-			track.stop();
-		});
-		peerConnection.localStream = null;
-	}
-
 	// cleanup socket
 	peerConnection.socket.removeAllListeners();
 	peerConnection.socket.disconnect();

@@ -14,7 +14,6 @@ export default class SharingSession {
 	id: string;
 	deviceID: string;
 	sharingType: SharingTypeEnum;
-	sharingStream: MediaStream | null;
 	roomID: string;
 	connectedDeviceAt: Date | null;
 	sharingStartedAt: Date | null;
@@ -35,7 +34,6 @@ export default class SharingSession {
 		this.id = uuid.v4();
 		this.deviceID = '';
 		this.sharingType = SharingTypeEnum.NOT_SET;
-		this.sharingStream = null;
 		this.roomID = _roomID;
 		this.connectedDeviceAt = null;
 		this.sharingStartedAt = null;

@@ -1,7 +1,6 @@
 // SimplePeer is loaded by peerConnectionHelperRendererWindowIndex.html.
 import handlePeerOnData from './handlePeerOnData';
 import NullSimplePeer from './NullSimplePeer';
-// import simplePeerHandleSdpTransform from './simplePeerHandleSdpTransform';
 
 export default function handleCreatePeer(
 	peerConnection: PeerConnection,
@@ -18,14 +17,6 @@ export default function handleCreatePeer(
 			peerConnection.peer = NullSimplePeer;
 		}
 
-		// cleanup existing stream before creating new one
-		if (peerConnection.localStream) {
-			peerConnection.localStream.getTracks().forEach((track) => {
-				track.stop();
-			});
-			peerConnection.localStream = null;
-		}
-
 		// clear old signals and reset call state when recreating peer
 		peerConnection.signalsDataToCallUser = [];
 		peerConnection.isCallStarted = false;
@@ -40,7 +31,6 @@ export default function handleCreatePeer(
 					// trickle: false,
 					// wrtc: window.api.wrtc,
 					config: { iceServers: [] },
-					// sdpTransform: simplePeerHandleSdpTransform,
 				});
 				// }
 

@@ -9,13 +9,6 @@ import {
 	prepare as prepareMessage,
 	type ProcessedPayload,
 } from '../../utils/message';
-import VideoAutoQualityOptimizer from '../VideoAutoQualityOptimizer';
-import {
-	VideoQuality,
-	type VideoQualityType,
-} from '../VideoAutoQualityOptimizer/VideoQualityEnum';
-import { prepareDataMessageToChangeQuality } from './simplePeerDataMessages';
-import { VIDEO_QUALITY_TO_DECIMAL } from './../../constants/appConstants';
 import { ErrorMessage } from '../../components/ErrorDialog/ErrorMessageEnum';
 import peerConnectionHandleSocket from './peerConnectionHandleSocket';
 import peerConnectionHandlePeer from './peerConnectionHandlePeer';
@@ -55,11 +48,7 @@ export default class PeerConnection {
 
 	screenSharingSourceType: string | undefined = undefined;
 
-	videoQuality: VideoQualityType = VideoQuality.Q_100_PERCENT;
-
-	videoAutoQualityOptimizer: VideoAutoQualityOptimizer;
-
-	isStreamStarted: boolean = false;
+	isPeerConnected: boolean = false;
 
 	UIHandler: PeerConnectionUIHandler;
 
@@ -76,11 +65,9 @@ export default class PeerConnection {
 	constructor(
 		roomId: string,
 		setSnapshotReadyCallback: (isReady: boolean) => void,
-		videoAutoQualityOptimizer: VideoAutoQualityOptimizer,
 		UIHandler: PeerConnectionUIHandler,
 	) {
 		this.setSnapshotReadyCallback = setSnapshotReadyCallback;
-		this.videoAutoQualityOptimizer = videoAutoQualityOptimizer;
 		this.UIHandler = UIHandler;
 		this.roomId = roomId;
 		this.socket = connectSocket(this.roomId);
@@ -95,27 +82,9 @@ export default class PeerConnection {
 		this.connectionCheckInterval = startSocketConnectedCheckingLoop(this);
 	}
 
-	setVideoQuality(videoQuality: VideoQualityType) {
-		this.videoQuality = videoQuality;
-		this.videoQualityChangedCallback();
-	}
-
-	videoQualityChangedCallback() {
-		if (!this.peer) return;
-		if (this.videoQuality === VideoQuality.Q_AUTO) {
-			this.peer.send(prepareDataMessageToChangeQuality(1));
-		} else {
-			this.peer.send(
-				prepareDataMessageToChangeQuality(
-					VIDEO_QUALITY_TO_DECIMAL[this.videoQuality],
-				),
-			);
-		}
-	}
-
-	stopStream() {
+	stopPeer() {
 		this.setSnapshotReadyCallback(false);
-		this.isStreamStarted = false;
+		this.isPeerConnected = false;
 
 		// destroy the peer connection
 		if (this.peer) {
@@ -156,9 +125,8 @@ export default class PeerConnection {
 			this.setMyDeviceDetailsTimeout = null;
 		}
 
-		// stop stream if started
-		if (this.isStreamStarted) {
-			this.stopStream();
+		if (this.isPeerConnected) {
+			this.stopPeer();
 		}
 
 		// cleanup peer connection

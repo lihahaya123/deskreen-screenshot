@@ -103,18 +103,6 @@ class DesktopCapturerSourcesService {
 		return source.thumbnail.toJPEG(80);
 	}
 
-	getSourceDisplayIDByDisplayCapturerSourceID(sourceID: string): string {
-		let displayID = '';
-		[...this.sources.keys()].forEach((key) => {
-			const source = this.sources.get(key);
-			if (!source) return;
-			if (source.source.id === sourceID) {
-				displayID = source.source.display_id;
-			}
-		});
-		return displayID;
-	}
-
 	addWindowClosedListener(
 		_sharingSessionID: string,
 		_callback: SourcesDisappearListener,

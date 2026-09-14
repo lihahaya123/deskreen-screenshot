@@ -7,10 +7,9 @@ export default (
 	peerConnection: PeerConnection,
 	errorMessage: ErrorMessageType,
 ) => {
-	// allow showing disconnect errors even when stream is started
 	const isDisconnectError = errorMessage === ErrorMessage.DISCONNECTED;
-	if (peerConnection.isStreamStarted && !isDisconnectError) {
-		// avoid flashing an error if the stream already started (except for disconnect errors)
+	if (peerConnection.isPeerConnected && !isDisconnectError) {
+		// Avoid flashing an error after the peer is ready, except on disconnect.
 		return;
 	}
 	if (

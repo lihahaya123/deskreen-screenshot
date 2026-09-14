@@ -38,13 +38,12 @@ export default (peerConnection: PeerConnection) => {
 
 	socket.on('disconnect', () => {
 		disconnectCount++;
-		// handle disconnect even when stream is started - stop stream and show error
-		if (peerConnection.isStreamStarted && disconnectCount >= 1) {
-			peerConnection.stopStream();
+		if (peerConnection.isPeerConnected && disconnectCount >= 1) {
+			peerConnection.stopPeer();
 			setAndShowErrorDialogMessage(peerConnection, ErrorMessage.DISCONNECTED);
 			return;
 		}
-		// for pre-stream disconnects, wait for sustained disconnection before showing error
+		// Before the peer connects, wait for a sustained socket disconnection.
 		if (disconnectCount > 6 && isAllowed) {
 			setAndShowErrorDialogMessage(peerConnection, ErrorMessage.DISCONNECTED);
 		}
