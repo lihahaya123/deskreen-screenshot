@@ -1,17 +1,22 @@
-import {
-	installExtension,
-	REACT_DEVELOPER_TOOLS,
-} from 'electron-devtools-installer';
+import { session } from 'electron';
+import { downloadChromeExtension } from 'electron-devtools-installer/dist/downloadChromeExtension';
+
+const REACT_DEVELOPER_TOOLS_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
 
 export default async function installExtensions(): Promise<void> {
-	// const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-	// const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'];
-	//
-	// return Promise.all(
-	//   extensions.map((name) => installer.default(installer[name], forceDownload)),
-	// ).catch(console.log);
+	try {
+		const extensions = session.defaultSession.extensions;
+		const installedExtension = extensions
+			.getAllExtensions()
+			.find(({ id }) => id === REACT_DEVELOPER_TOOLS_ID);
+		const react =
+			installedExtension ||
+			(await extensions.loadExtension(
+				await downloadChromeExtension(REACT_DEVELOPER_TOOLS_ID),
+			));
 
-	installExtension([REACT_DEVELOPER_TOOLS])
-		.then(([react]) => console.log(`Added Extensions: ${react.name}`))
-		.catch((err) => console.log('An error occurred: ', err));
+		console.log(`Added Extensions: ${react.name}`);
+	} catch (err) {
+		console.log('An error occurred: ', err);
+	}
 }
