@@ -134,6 +134,47 @@ class DeskreenSignalingServer {
 			ctx.body = { roomId };
 		});
 
+		router.get('/api/screenshot', async (ctx) => {
+			const viewerID = ctx.get('X-Deskreen-Viewer-Id');
+			const {
+				connectedDevicesService,
+				desktopCapturerSourcesService,
+				sharingSessionService,
+			} = getDeskreenGlobal();
+
+			if (!viewerID || !connectedDevicesService.isTrustedDevice(viewerID)) {
+				ctx.status = 403;
+				ctx.body = { code: 'VIEWER_NOT_TRUSTED' };
+				return;
+			}
+
+			const device = connectedDevicesService
+				.getDevices()
+				.find((candidate) => candidate.id === viewerID);
+			const sharingSession = device
+				? sharingSessionService.sharingSessions.get(device.sharingSessionID)
+				: undefined;
+
+			if (!sharingSession?.desktopCapturerSourceID) {
+				ctx.status = 409;
+				ctx.body = { code: 'SHARING_SOURCE_NOT_SELECTED' };
+				return;
+			}
+
+			try {
+				const screenshot = await desktopCapturerSourcesService.captureSourceJPEG(
+					sharingSession.desktopCapturerSourceID,
+				);
+				ctx.set('Cache-Control', 'no-store');
+				ctx.type = 'image/jpeg';
+				ctx.body = screenshot;
+			} catch (error) {
+				this.log.error('Failed to capture requested screenshot', error);
+				ctx.status = 404;
+				ctx.body = { code: 'SHARING_SOURCE_UNAVAILABLE' };
+			}
+		});
+
 		this.app.use(cors());
 		this.app.use(router.routes());
 

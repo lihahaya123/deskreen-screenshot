@@ -18,12 +18,12 @@ type CreatePeerConnectionUseEffectParams = {
 	setScreenSharingSourceType: (_: ScreenSharingSourceType) => void;
 	setDialogErrorMessage: (_: ErrorMessage) => void;
 	setIsErrorDialogOpen: (_: boolean) => void;
-	setUrl: (_: MediaStream | null) => void;
+	setSnapshotReady: (_: boolean) => void;
 	setPeer: (_: undefined | PeerConnection) => void;
 };
 type handleDisplayingLoadingSharingIconLoopParams = {
 	promptStep: number;
-	url: MediaStream | null;
+	isSnapshotReady: boolean;
 	setIsShownLoadingSharingIcon: (_: boolean) => void;
 	loadingSharingIconType: LoadingSharingIconType;
 	isShownLoadingSharingIcon: boolean;

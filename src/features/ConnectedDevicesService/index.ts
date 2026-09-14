@@ -139,6 +139,13 @@ export class ConnectedDevicesService {
 		return this.trustedReconnectDevice.desktopCapturerSourceID;
 	}
 
+	isTrustedDevice(deviceID: string): boolean {
+		return (
+			this.trustedReconnectDevice?.deviceID === deviceID &&
+			this.slot.isOccupiedBy(deviceID)
+		);
+	}
+
 	forgetTrustedDevice(deviceID: string): void {
 		if (this.trustedReconnectDevice?.deviceID === deviceID) {
 			this.trustedReconnectDevice = null;

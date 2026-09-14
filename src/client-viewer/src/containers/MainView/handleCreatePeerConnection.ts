@@ -15,7 +15,7 @@ export default (params: CreatePeerConnectionUseEffectParams) => {
 		setScreenSharingSourceType,
 		setDialogErrorMessage,
 		setIsErrorDialogOpen,
-		setUrl,
+		setSnapshotReady,
 		setPeer,
 	} = params;
 
@@ -48,7 +48,7 @@ export default (params: CreatePeerConnectionUseEffectParams) => {
 
 			const _peer = new PeerConnection(
 				connectionRoomId,
-				setUrl,
+				setSnapshotReady,
 				new VideoAutoQualityOptimizer(),
 				UIHandler,
 			);

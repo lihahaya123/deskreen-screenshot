@@ -1,5 +1,4 @@
 // SimplePeer is loaded by peerConnectionHelperRendererWindowIndex.html.
-import createDesktopCapturerStream from './createDesktopCapturerStream';
 import handlePeerOnData from './handlePeerOnData';
 import NullSimplePeer from './NullSimplePeer';
 // import simplePeerHandleSdpTransform from './simplePeerHandleSdpTransform';
@@ -31,10 +30,7 @@ export default function handleCreatePeer(
 		peerConnection.signalsDataToCallUser = [];
 		peerConnection.isCallStarted = false;
 
-		createDesktopCapturerStream(
-			peerConnection,
-			peerConnection.desktopCapturerSourceID,
-		)
+		Promise.resolve()
 			.then(() => {
 				// if (peerConnection.peer === NullSimplePeer) {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -47,11 +43,6 @@ export default function handleCreatePeer(
 					// sdpTransform: simplePeerHandleSdpTransform,
 				});
 				// }
-
-				// TODO: basically here we need a client side simple peer, but we get a nodejs side simple peer
-				if (peerConnection.localStream !== null) {
-					peerConnection.peer.addStream(peerConnection.localStream);
-				}
 
 				peerConnection.peer.on('signal', (data: string) => {
 					// fired when simple peer and webrtc done preparation to start call on peerConnection machine

@@ -108,6 +108,22 @@ class DesktopCapturerSourcesService {
 		return appWindowSources;
 	}
 
+	async captureSourceJPEG(sourceID: string): Promise<Buffer> {
+		const sourceType = getSourceTypeFromSourceID(sourceID);
+		const sources = await desktopCapturer.getSources({
+			types: [sourceType],
+			thumbnailSize: { width: 1920, height: 1080 },
+			fetchWindowIcons: false,
+		});
+		const source = sources.find((candidate) => candidate.id === sourceID);
+
+		if (!source || source.thumbnail.isEmpty()) {
+			throw new Error('selected desktop source is unavailable');
+		}
+
+		return source.thumbnail.toJPEG(80);
+	}
+
 	getSourceDisplayIDByDisplayCapturerSourceID(sourceID: string): string {
 		let displayID = '';
 		[...this.sources.keys()].forEach((key) => {

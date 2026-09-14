@@ -1,8 +1,6 @@
 import {
-	prepareDataMessageToChangeQuality,
 	prepareDataMessageToGetSharingSourceType,
 } from './simplePeerDataMessages';
-import { VideoQuality } from '../VideoAutoQualityOptimizer/VideoQualityEnum';
 import { ErrorMessage } from '../../components/ErrorDialog/ErrorMessageEnum';
 import PeerConnectionPeerIsNullError from './errors/PeerConnectionPeerIsNullError';
 import { ScreenSharingSource } from './ScreenSharingSourceEnum';
@@ -19,38 +17,11 @@ export default (peerConnection: PeerConnection) => {
 	if (peerConnection.peer === null) {
 		throw new PeerConnectionPeerIsNullError();
 	}
-	peerConnection.peer.on('stream', (stream) => {
-		peerConnection.setUrlCallback(stream);
-
-		setTimeout(() => {
-			peerConnection.videoAutoQualityOptimizer.setGoodQualityCallback(() => {
-				if (peerConnection.videoQuality === VideoQuality.Q_AUTO) {
-					try {
-						peerConnection.peer?.send(prepareDataMessageToChangeQuality(1));
-					} catch (e) {
-						console.log(e);
-					}
-				}
-			});
-
-			peerConnection.videoAutoQualityOptimizer.setHalfQualityCallbak(() => {
-				if (peerConnection.videoQuality === VideoQuality.Q_AUTO) {
-					try {
-						peerConnection.peer?.send(prepareDataMessageToChangeQuality(0.5));
-					} catch (e) {
-						console.log(e);
-					}
-				}
-			});
-		}, 1000);
-
-		peerConnection.videoAutoQualityOptimizer.startOptimizationLoop();
-
-		setTimeout(getSharingShourceType, 1000, peerConnection);
-
+	peerConnection.peer.on('connect', () => {
+		peerConnection.setSnapshotReadyCallback(true);
 		peerConnection.isStreamStarted = true;
+		getSharingShourceType(peerConnection);
 
-		// if any transient error dialog was shown earlier, close it now
 		try {
 			peerConnection.UIHandler.setIsErrorDialogOpen(false);
 			peerConnection.UIHandler.errorDialogMessage = ErrorMessage.UNKNOWN_ERROR;

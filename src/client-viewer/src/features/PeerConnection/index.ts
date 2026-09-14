@@ -9,7 +9,6 @@ import {
 	prepare as prepareMessage,
 	type ProcessedPayload,
 } from '../../utils/message';
-import setSdpMediaBitrate from './setSdpMediaBitrate';
 import VideoAutoQualityOptimizer from '../VideoAutoQualityOptimizer';
 import {
 	VideoQuality,
@@ -29,7 +28,7 @@ import PeerConnectionSocketNotDefined from './errors/PeerConnectionSocketNotDefi
 import PeerConnectionUserIsNotDefinedError from './errors/PeerConnectionUserIsNotDefinedError';
 import PeerConnectionPartnerIsNotDefinedError from './errors/PeerConnectionPartnerIsNotDefinedError';
 
-const VIEWER_ID_STORAGE_KEY = 'deskreen-viewer-id';
+export const VIEWER_ID_STORAGE_KEY = 'deskreen-viewer-id';
 
 export default class PeerConnection {
 	roomId: string;
@@ -50,7 +49,7 @@ export default class PeerConnection {
 		myRoomId: '',
 	};
 
-	setUrlCallback: (url: MediaStream | null) => void;
+	setSnapshotReadyCallback: (isReady: boolean) => void;
 
 	uaParser: UAParser;
 
@@ -76,11 +75,11 @@ export default class PeerConnection {
 
 	constructor(
 		roomId: string,
-		setUrlCallback: (url: MediaStream | null) => void,
+		setSnapshotReadyCallback: (isReady: boolean) => void,
 		videoAutoQualityOptimizer: VideoAutoQualityOptimizer,
 		UIHandler: PeerConnectionUIHandler,
 	) {
-		this.setUrlCallback = setUrlCallback;
+		this.setSnapshotReadyCallback = setSnapshotReadyCallback;
 		this.videoAutoQualityOptimizer = videoAutoQualityOptimizer;
 		this.UIHandler = UIHandler;
 		this.roomId = roomId;
@@ -115,8 +114,7 @@ export default class PeerConnection {
 	}
 
 	stopStream() {
-		// stop the video stream by clearing the stream URL
-		this.setUrlCallback(null);
+		this.setSnapshotReadyCallback(false);
 		this.isStreamStarted = false;
 
 		// destroy the peer connection
@@ -197,15 +195,6 @@ export default class PeerConnection {
 		const peer = new SimplePeer({
 			initiator: false,
 			config: { iceServers: [] },
-			sdpTransform: (sdp) => {
-				let newSDP = sdp;
-				newSDP = setSdpMediaBitrate(
-					newSDP as unknown as string,
-					'video',
-					500000,
-				) as unknown as typeof sdp;
-				return newSDP;
-			},
 		});
 
 		this.peer = peer;

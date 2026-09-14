@@ -1,29 +1,21 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Grid } from 'react-flexbox-grid';
-import screenfull from 'screenfull';
 import './index.css';
 import PeerConnection from '../../features/PeerConnection';
-import {
-	VideoQuality,
-	type VideoQualityType,
-} from '../../features/VideoAutoQualityOptimizer/VideoQualityEnum';
 import ErrorDialog from '../../components/ErrorDialog';
 import {
 	ErrorMessage,
 	type ErrorMessageType,
 } from '../../components/ErrorDialog/ErrorMessageEnum';
 import ConnectionPropmpts from '../../containers/ConnectionPrompts';
-import PlayerView from '../../containers/PlayerView';
-import handleSetVideoQuality from './handleSetVideoQuality';
+import SnapshotView from '../../containers/SnapshotView';
 import { DUMMY_MY_DEVICE_DETAILS } from '../../constants/appConstants';
 import handleNoConnectionTimeout from './handleNoConnectionTimeout';
 import handleCreatePeerConnection from './handleCreatePeerConnection';
-import handleRemoveDanglingReactRevealContainer from './handleRemoveDanglingReactRevealContainer';
 import handleDisplayingLoadingSharingIconLoop from './handleDisplayingLoadingSharingIconLoop';
 import { ScreenSharingSource } from '../../features/PeerConnection/ScreenSharingSourceEnum';
 import ConnectionIcon from './ConnectionIconEnum';
 import { LoadingSharingIconEnum } from './LoadingSharingIconEnum';
-import { useScreenViewingTracker } from './useScreenViewingTracker';
 
 function MainView() {
 	const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
@@ -37,19 +29,14 @@ function MainView() {
 		DUMMY_MY_DEVICE_DETAILS,
 	);
 
-	const [playing, setPlaying] = useState(true);
-	const [url, setUrl] = useState<MediaStream | null>(null);
-	const [screenSharingSourceType, setScreenSharingSourceType] =
+	const [, setScreenSharingSourceType] =
 		useState<ScreenSharingSourceType>(ScreenSharingSource.SCREEN);
-	const [isWithControls, setIsWithControls] = useState(!screenfull.isEnabled);
+	const [isSnapshotReady, setSnapshotReady] = useState(false);
 	const [isShownTextPrompt, setIsShownTextPrompt] = useState(false);
 	const [isShownLoadingSharingIcon, setIsShownLoadingSharingIcon] =
 		useState(false);
 	const [loadingSharingIconType, setLoadingSharingIconType] =
 		useState<LoadingSharingIconType>(LoadingSharingIconEnum.DESKTOP);
-	const [videoQuality, setVideoQuality] = useState<VideoQualityType>(
-		VideoQuality.Q_100_PERCENT,
-	);
 	const [peer, setPeer] = useState<undefined | PeerConnection>();
 	const [connectionRoomId, setConnectionRoomId] = useState<string>('');
 
@@ -92,8 +79,6 @@ function MainView() {
 		};
 	}, []);
 
-	useEffect(handleSetVideoQuality(videoQuality, peer), [videoQuality, peer]);
-
 	useEffect(handleNoConnectionTimeout(myDeviceDetails, setIsErrorDialogOpen), [
 		myDeviceDetails,
 	]);
@@ -109,58 +94,38 @@ function MainView() {
 			setScreenSharingSourceType,
 			setDialogErrorMessage,
 			setIsErrorDialogOpen,
-			setUrl,
+			setSnapshotReady,
 			setPeer,
 		}),
 		[connectionRoomId],
 	);
 
-	const handlePlayPause = useCallback(() => {
-		setPlaying(!playing);
-	}, [playing]);
-
-	useEffect(handleRemoveDanglingReactRevealContainer(url), [url]);
-
 	useEffect(
 		handleDisplayingLoadingSharingIconLoop({
 			promptStep,
-			url,
+			isSnapshotReady,
 			setIsShownLoadingSharingIcon,
 			loadingSharingIconType,
 			isShownLoadingSharingIcon,
 			setLoadingSharingIconType,
 		}),
-		[promptStep, url],
+		[promptStep, isSnapshotReady],
 	);
-
-	useScreenViewingTracker({
-		streamUrl: url,
-		isPlaying: playing,
-		isErrorDialogOpen,
-		dialogErrorMessage,
-	});
 
 	return (
 		<Grid>
-			<ConnectionPropmpts
-				myDeviceDetails={myDeviceDetails}
-				isShownTextPrompt={isShownTextPrompt}
-				promptStep={promptStep}
-				connectionIconType={connectionIconType}
-				spinnerIconType={loadingSharingIconType}
-				isShownSpinnerIcon={isShownLoadingSharingIcon}
-			/>
-			<PlayerView
-				streamUrl={url}
-				screenSharingSourceType={screenSharingSourceType}
-				setIsWithControls={setIsWithControls}
-				isWithControls={isWithControls}
-				handlePlayPause={handlePlayPause}
-				isPlaying={playing}
-				setPlaying={setPlaying}
-				setVideoQuality={setVideoQuality}
-				videoQuality={videoQuality}
-			/>
+			{isSnapshotReady ? (
+				<SnapshotView />
+			) : (
+				<ConnectionPropmpts
+					myDeviceDetails={myDeviceDetails}
+					isShownTextPrompt={isShownTextPrompt}
+					promptStep={promptStep}
+					connectionIconType={connectionIconType}
+					spinnerIconType={loadingSharingIconType}
+					isShownSpinnerIcon={isShownLoadingSharingIcon}
+				/>
+			)}
 			<ErrorDialog
 				errorMessage={dialogErrorMessage}
 				isOpen={isErrorDialogOpen}

@@ -3,7 +3,7 @@ import { LoadingSharingIconEnum } from './LoadingSharingIconEnum';
 export default (params: handleDisplayingLoadingSharingIconLoopParams) => {
 	const {
 		promptStep,
-		url,
+		isSnapshotReady,
 		setIsShownLoadingSharingIcon,
 		loadingSharingIconType,
 		isShownLoadingSharingIcon,
@@ -11,7 +11,7 @@ export default (params: handleDisplayingLoadingSharingIconLoopParams) => {
 	} = params;
 	return () => {
 		let interval: NodeJS.Timeout;
-		if (promptStep === 3 && url === null) {
+		if (promptStep === 3 && !isSnapshotReady) {
 			setIsShownLoadingSharingIcon(true);
 
 			let currentIcon = loadingSharingIconType;
