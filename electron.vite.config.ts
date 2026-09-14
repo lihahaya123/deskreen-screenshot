@@ -8,6 +8,7 @@ import {
 // @ts-ignore
 import react from '@vitejs/plugin-react';
 import fs from 'fs-extra';
+import type { Plugin } from 'vite';
 
 // Custom Vite plugin to copy the 'client-viewer/dist' directory
 const copyClientViewerStaticFiles = () => {
@@ -36,14 +37,33 @@ const copyClientViewerStaticFiles = () => {
 	};
 };
 
-const copySimplePeerMinJsStaticFiles = () => {
+const copySimplePeerMinJsStaticFiles = (): Plugin => {
+	const sourceFile = resolve(
+		__dirname,
+		'node_modules/simple-peer/simplepeer.min.js',
+	);
+
 	return {
 		name: 'copy-simple-peer-min-js-static-files',
-		async writeBundle() {
-			const sourceFile = resolve(
-				__dirname,
-				'node_modules/simple-peer/simplepeer.min.js',
+		configureServer(server) {
+			server.middlewares.use(
+				'/assets/simplepeer.min.js',
+				async (_request, response) => {
+					try {
+						response.setHeader(
+							'Content-Type',
+							'application/javascript; charset=utf-8',
+						);
+						response.end(await fs.readFile(sourceFile));
+					} catch (error) {
+						console.error(`Error serving simple-peer.min.js: ${error}`);
+						response.statusCode = 500;
+						response.end();
+					}
+				},
 			);
+		},
+		async writeBundle() {
 			const destDir = resolve(__dirname, 'out/renderer/assets');
 
 			console.log(`Attempting to copy simple-peer.min.js from: ${sourceFile}`);

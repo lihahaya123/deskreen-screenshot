@@ -7,7 +7,7 @@ export default function handleSelfDestroy(
 ): void {
 	peerConnection.partner = NullUser;
 	window.electron.ipcRenderer.invoke(
-		IpcEvents.DisconnectDeviceById,
+		IpcEvents.ReleaseDeviceConnection,
 		peerConnection.partnerDeviceDetails.id,
 	);
 

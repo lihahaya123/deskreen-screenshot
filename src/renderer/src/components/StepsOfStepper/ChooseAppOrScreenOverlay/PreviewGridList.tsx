@@ -32,7 +32,7 @@ export default function PreviewGridList(props: PreviewGridListProps) {
 							sharingSourceID={id}
 							isChangeAppearanceOnHover
 							onClickCard={async () => {
-								window.electron.ipcRenderer.invoke(
+								await window.electron.ipcRenderer.invoke(
 									IpcEvents.SetDesktopCapturerSourceId,
 									id,
 								);

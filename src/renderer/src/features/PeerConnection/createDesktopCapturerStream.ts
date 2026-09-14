@@ -6,7 +6,7 @@ export default async function createDesktopCapturerStream(
 	sourceID: string,
 ): Promise<void> {
 	try {
-		if (process.env.RUN_MODE === 'test') return;
+		if (import.meta.env.MODE === 'test') return;
 
 		if (sourceID.includes(DesktopCapturerSourceType.SCREEN)) {
 			const stream = await getDesktopSourceStreamBySourceID(

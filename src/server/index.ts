@@ -112,6 +112,28 @@ class DeskreenSignalingServer {
 		this.app = new Koa();
 		const router = new Router();
 
+		router.get('/api/current-room', (ctx) => {
+			const { connectedDevicesService, sharingSessionService } =
+				getDeskreenGlobal();
+			ctx.set('Cache-Control', 'no-store');
+
+			if (!connectedDevicesService.isSlotAvailable()) {
+				ctx.status = 409;
+				ctx.body = { code: 'VIEWER_SLOT_OCCUPIED' };
+				return;
+			}
+
+			const roomId =
+				sharingSessionService.waitingForConnectionSharingSession?.roomID;
+			if (!roomId) {
+				ctx.status = 503;
+				ctx.body = { code: 'SESSION_PREPARING' };
+				return;
+			}
+
+			ctx.body = { roomId };
+		});
+
 		this.app.use(cors());
 		this.app.use(router.routes());
 
@@ -137,6 +159,9 @@ class DeskreenSignalingServer {
 
 		this.server = protocol.createServer(this.app.callback());
 		const io = new Server(this.server, {
+			cors: {
+				origin: '*',
+			},
 			pingInterval: 20000,
 			pingTimeout: 5000,
 			serveClient: false,

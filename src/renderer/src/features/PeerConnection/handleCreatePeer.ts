@@ -1,4 +1,4 @@
-// import SimplePeer from 'simple-peer';
+// SimplePeer is loaded by peerConnectionHelperRendererWindowIndex.html.
 import createDesktopCapturerStream from './createDesktopCapturerStream';
 import handlePeerOnData from './handlePeerOnData';
 import NullSimplePeer from './NullSimplePeer';
@@ -56,6 +56,14 @@ export default function handleCreatePeer(
 				peerConnection.peer.on('signal', (data: string) => {
 					// fired when simple peer and webrtc done preparation to start call on peerConnection machine
 					peerConnection.signalsDataToCallUser.push(data);
+					if (peerConnection.isCallStarted) {
+						peerConnection.sendEncryptedMessage({
+							type: 'CALL_USER',
+							payload: {
+								signalData: data,
+							},
+						});
+					}
 				});
 
 				peerConnection.peer.on('data', (data) => {

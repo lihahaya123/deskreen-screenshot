@@ -12,12 +12,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { makeStyles, createStyles } from '@material-ui/core';
 import { Row, Col } from 'react-flexbox-grid';
 import isProduction from '../../../../common/isProduction';
-import config from '../../../../common/config';
 import { IpcEvents } from '../../../../common/IpcEvents.enum';
 import { useTranslation } from 'react-i18next';
 import Logo192 from '../../assets/logo192.png';
-
-const { hostname } = config;
 
 const useStyles = makeStyles(() =>
 	createStyles({
@@ -54,11 +51,14 @@ const ScanQRStep: React.FC = () => {
 	const classes = useStyles();
 
 	const [isViewerSlotAvailable, setIsViewerSlotAvailable] = useState(true);
-	const [roomID, setRoomID] = useState('');
 	const [LOCAL_LAN_IP, setLocalLanIP] = useState('');
 	const [isQRCodeMagnified, setIsQRCodeMagnified] = useState(false);
 
 	useEffect(() => {
+		if (import.meta.env.DEV) {
+			setClientViewerPort('5174');
+			return;
+		}
 		window.electron.ipcRenderer
 			.invoke(IpcEvents.GetPort)
 			.then((port) => {
@@ -80,7 +80,6 @@ const ScanQRStep: React.FC = () => {
 			const isAvailable = Boolean(payload?.isAvailable);
 			setIsViewerSlotAvailable(isAvailable);
 			if (!isAvailable) {
-				setRoomID('');
 				setIsQRCodeMagnified(false);
 			}
 		};
@@ -92,7 +91,6 @@ const ScanQRStep: React.FC = () => {
 				const isAvailable = Boolean(availability);
 				setIsViewerSlotAvailable(isAvailable);
 				if (!isAvailable) {
-					setRoomID('');
 					setIsQRCodeMagnified(false);
 				}
 			})
@@ -116,22 +114,6 @@ const ScanQRStep: React.FC = () => {
 
 	useEffect(() => {
 		let cancelled = false;
-		const fetchRoomId = async (): Promise<void> => {
-			const roomId = await window.electron.ipcRenderer.invoke(
-				IpcEvents.GetWaitingForConnectionSharingSessionRoomId,
-			);
-			if (cancelled) return;
-			if (
-				typeof roomId === 'string' &&
-				roomId !== '' &&
-				isViewerSlotAvailable
-			) {
-				setRoomID(roomId);
-			} else {
-				setRoomID('');
-			}
-		};
-
 		const fetchLocalIp = async (): Promise<void> => {
 			const gotIP =
 				await window.electron.ipcRenderer.invoke('get-local-lan-ip');
@@ -140,34 +122,25 @@ const ScanQRStep: React.FC = () => {
 			}
 		};
 
-		void fetchRoomId();
 		void fetchLocalIp();
-		const roomInterval = setInterval(() => {
-			void fetchRoomId();
-		}, 1000);
 		const ipInterval = setInterval(() => {
 			void fetchLocalIp();
 		}, 1000);
 
 		return () => {
 			cancelled = true;
-			clearInterval(roomInterval);
 			clearInterval(ipInterval);
 		};
-	}, [isViewerSlotAvailable]);
+	}, []);
 
 	const portString = useMemo(() => {
 		return `:${clientViewerPort}`;
 	}, [clientViewerPort]);
-	const roomPath = useMemo(() => {
-		return roomID !== '' ? `/${roomID}` : '';
-	}, [roomID]);
 	const shareUrl = useMemo(() => {
 		if (!isViewerSlotAvailable) return '';
 		if (LOCAL_LAN_IP === '') return '';
-		if (roomPath === '') return '';
-		return `http://${LOCAL_LAN_IP}${portString}${roomPath}`;
-	}, [LOCAL_LAN_IP, portString, roomPath, isViewerSlotAvailable]);
+		return `http://${LOCAL_LAN_IP}${portString}/`;
+	}, [LOCAL_LAN_IP, portString, isViewerSlotAvailable]);
 	const isQrInteractive = shareUrl !== '';
 	const connectionLimitTooltip = t('connection-limit-reached-tooltip');
 	const qrTooltipContent = isQrInteractive
@@ -374,11 +347,6 @@ const ScanQRStep: React.FC = () => {
 						/>
 					</Col>
 					<Col>
-						<H3>
-							{isQrInteractive
-								? `${hostname}${portString}${roomPath}`
-								: t('waiting-for-connection')}
-						</H3>
 						<H3>{isQrInteractive ? shareUrl : t('waiting-for-connection')}</H3>
 					</Col>
 				</Row>

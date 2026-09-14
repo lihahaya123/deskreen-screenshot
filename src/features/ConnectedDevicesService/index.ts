@@ -56,6 +56,10 @@ class SingleViewerSlot {
 
 export class ConnectedDevicesService {
 	private readonly slot = new SingleViewerSlot();
+	private trustedReconnectDevice: {
+		deviceID: string;
+		desktopCapturerSourceID: string;
+	} | null = null;
 
 	pendingConnectionDevice: Device = nullDevice;
 
@@ -86,12 +90,19 @@ export class ConnectedDevicesService {
 	}
 
 	disconnectAllDevices(): void {
+		this.trustedReconnectDevice = null;
 		this.slot.release();
+		this.notifyAvailabilityListeners();
+	}
+
+	releaseDeviceConnection(deviceIDToRemove: string): void {
+		this.slot.releaseById(deviceIDToRemove);
 		this.notifyAvailabilityListeners();
 	}
 
 	disconnectDeviceByID(deviceIDToRemove: string): Promise<undefined> {
 		return new Promise<undefined>((resolve) => {
+			this.forgetTrustedDevice(deviceIDToRemove);
 			this.slot.releaseById(deviceIDToRemove);
 			this.notifyAvailabilityListeners();
 			resolve(undefined);
@@ -112,6 +123,26 @@ export class ConnectedDevicesService {
 
 	setPendingConnectionDevice(device: Device): void {
 		this.pendingConnectionDevice = device;
+	}
+
+	trustDevice(deviceID: string, desktopCapturerSourceID: string): void {
+		this.trustedReconnectDevice = {
+			deviceID,
+			desktopCapturerSourceID,
+		};
+	}
+
+	getTrustedReconnectSourceID(deviceID: string): string | undefined {
+		if (this.trustedReconnectDevice?.deviceID !== deviceID) {
+			return undefined;
+		}
+		return this.trustedReconnectDevice.desktopCapturerSourceID;
+	}
+
+	forgetTrustedDevice(deviceID: string): void {
+		if (this.trustedReconnectDevice?.deviceID === deviceID) {
+			this.trustedReconnectDevice = null;
+		}
 	}
 
 	private getAvailabilityState(): ViewerConnectionAvailability {

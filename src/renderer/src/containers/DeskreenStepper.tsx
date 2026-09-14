@@ -205,6 +205,12 @@ const DeskreenStepper = ({
 
 	const handleUserClickedDeviceDisconnectButton =
 		useCallback(async (): Promise<void> => {
+			if (pendingConnectionDevice?.sharingSessionID) {
+				await window.electron.ipcRenderer.invoke(
+					IpcEvents.DisconnectPeerAndDestroySharingSessionBySessionID,
+					pendingConnectionDevice.sharingSessionID,
+				);
+			}
 			handleReset();
 
 			await showMessageFromNewToaster(
@@ -212,7 +218,7 @@ const DeskreenStepper = ({
 					'device-is-successfully-disconnected-by-you-you-can-connect-a-new-device',
 				),
 			);
-		}, [handleReset, t]);
+		}, [handleReset, pendingConnectionDevice, t]);
 
 	const renderIntermediateOrSuccessStepContent = useCallback(() => {
 		return (

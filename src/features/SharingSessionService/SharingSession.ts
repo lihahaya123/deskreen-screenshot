@@ -23,6 +23,9 @@ export default class SharingSession {
 	peerConnectionHelperRenderer: BrowserWindow | undefined;
 	onDeviceConnectedCallback: undefined | ((device: Device) => void);
 	desktopCapturerSourceID: string;
+	desktopCapturerSourceReadyResolver: (() => void) | null;
+	desktopCapturerSourceReadyRejecter: ((error: Error) => void) | null;
+	desktopCapturerSourceReadyTimeout: NodeJS.Timeout | null;
 
 	constructor(
 		_roomID: string,
@@ -39,6 +42,9 @@ export default class SharingSession {
 		this.status = SharingSessionStatusEnum.NOT_CONNECTED;
 		this.statusChangeListeners = [] as SharingSessionStatusChangeListener[];
 		this.desktopCapturerSourceID = '';
+		this.desktopCapturerSourceReadyResolver = null;
+		this.desktopCapturerSourceReadyRejecter = null;
+		this.desktopCapturerSourceReadyTimeout = null;
 		this.onDeviceConnectedCallback = undefined;
 
 		if (process.env.RUN_MODE === 'test') return;
@@ -69,6 +75,24 @@ export default class SharingSession {
 						this.onDeviceConnectedCallback(data);
 					}
 				}
+				if (
+					channel === 'desktop-capturer-source-ready' &&
+					data?.sourceID === this.desktopCapturerSourceID
+				) {
+					if (this.desktopCapturerSourceReadyTimeout) {
+						clearTimeout(this.desktopCapturerSourceReadyTimeout);
+						this.desktopCapturerSourceReadyTimeout = null;
+					}
+					if (data.success) {
+						this.desktopCapturerSourceReadyResolver?.();
+					} else {
+						this.desktopCapturerSourceReadyRejecter?.(
+							new Error(data.error || 'failed to prepare desktop source'),
+						);
+					}
+					this.desktopCapturerSourceReadyResolver = null;
+					this.desktopCapturerSourceReadyRejecter = null;
+				}
 			},
 		);
 
@@ -82,6 +106,15 @@ export default class SharingSession {
 	}
 
 	destroy(): void {
+		if (this.desktopCapturerSourceReadyTimeout) {
+			clearTimeout(this.desktopCapturerSourceReadyTimeout);
+			this.desktopCapturerSourceReadyTimeout = null;
+		}
+		this.desktopCapturerSourceReadyRejecter?.(
+			new Error('sharing session was destroyed'),
+		);
+		this.desktopCapturerSourceReadyResolver = null;
+		this.desktopCapturerSourceReadyRejecter = null;
 		this.peerConnectionHelperRenderer?.close();
 	}
 
@@ -89,13 +122,25 @@ export default class SharingSession {
 		this.onDeviceConnectedCallback = callback;
 	}
 
-	setDesktopCapturerSourceID(id: string): void {
+	setDesktopCapturerSourceID(id: string): Promise<void> {
 		this.desktopCapturerSourceID = id;
-		if (process.env.RUN_MODE === 'test') return;
-		this.peerConnectionHelperRenderer?.webContents.send(
-			'set-desktop-capturer-source-id',
-			id,
-		);
+		if (process.env.RUN_MODE === 'test') return Promise.resolve();
+
+		return new Promise<void>((resolve, reject) => {
+			this.desktopCapturerSourceReadyResolver = resolve;
+			this.desktopCapturerSourceReadyRejecter = reject;
+			this.desktopCapturerSourceReadyTimeout = setTimeout(() => {
+				this.desktopCapturerSourceReadyResolver = null;
+				this.desktopCapturerSourceReadyRejecter = null;
+				this.desktopCapturerSourceReadyTimeout = null;
+				reject(new Error('timed out while preparing desktop source'));
+			}, 15000);
+
+			this.peerConnectionHelperRenderer?.webContents.send(
+				'set-desktop-capturer-source-id',
+				id,
+			);
+		});
 	}
 
 	callPeer(): void {

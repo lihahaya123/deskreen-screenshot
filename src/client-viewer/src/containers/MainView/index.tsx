@@ -54,19 +54,42 @@ function MainView() {
 	const [connectionRoomId, setConnectionRoomId] = useState<string>('');
 
 	useEffect(() => {
-		const { pathname } = window.location;
-		const normalizedPath = pathname.startsWith('/')
-			? pathname.slice(1)
-			: pathname;
-		const extractedRoomId = normalizedPath.split('/').filter(Boolean)[0] || '';
+		let cancelled = false;
+		let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-		if (extractedRoomId !== '') {
-			setConnectionRoomId(extractedRoomId);
-			return;
-		}
+		const resolveCurrentRoom = async (): Promise<void> => {
+			try {
+				const response = await fetch('/api/current-room', {
+					cache: 'no-store',
+				});
+				if (!response.ok) {
+					throw new Error(`room is not ready: ${response.status}`);
+				}
 
-		const fallbackRoomId = Math.random().toString(36).substring(2, 10);
-		setConnectionRoomId(fallbackRoomId);
+				const data = (await response.json()) as { roomId?: string };
+				if (!cancelled && data.roomId) {
+					setConnectionRoomId(data.roomId);
+					return;
+				}
+			} catch (error) {
+				console.log('Waiting for an available sharing session', error);
+			}
+
+			if (!cancelled) {
+				retryTimer = setTimeout(() => {
+					void resolveCurrentRoom();
+				}, 1000);
+			}
+		};
+
+		void resolveCurrentRoom();
+
+		return () => {
+			cancelled = true;
+			if (retryTimer) {
+				clearTimeout(retryTimer);
+			}
+		};
 	}, []);
 
 	useEffect(handleSetVideoQuality(videoQuality, peer), [videoQuality, peer]);

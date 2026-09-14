@@ -18,6 +18,7 @@ export type CallUserMessageWithPayload = {
 export type DeviceDetailsMessageWithPayload = {
 	type: 'DEVICE_DETAILS';
 	payload: {
+		sender: string;
 		deviceType: string;
 		os: string;
 		browser: string;
@@ -70,7 +71,7 @@ export function handleDeviceIPMessage(
 ): void {
 	if (message.type !== 'DEVICE_DETAILS') return;
 	const device = {
-		id: Math.random().toString(),
+		id: message.payload.sender,
 		deviceIP,
 		deviceType: message.payload.deviceType,
 		deviceOS: message.payload.os,

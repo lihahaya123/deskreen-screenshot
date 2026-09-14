@@ -29,6 +29,8 @@ import PeerConnectionSocketNotDefined from './errors/PeerConnectionSocketNotDefi
 import PeerConnectionUserIsNotDefinedError from './errors/PeerConnectionUserIsNotDefinedError';
 import PeerConnectionPartnerIsNotDefinedError from './errors/PeerConnectionPartnerIsNotDefinedError';
 
+const VIEWER_ID_STORAGE_KEY = 'deskreen-viewer-id';
+
 export default class PeerConnection {
 	roomId: string;
 
@@ -228,7 +230,15 @@ export default class PeerConnection {
 	createUser() {
 		return new Promise<LocalPeerUser>((resolve) => {
 			const username = shortId.generate();
-			const id = shortId.generate();
+			let id = window.localStorage.getItem(VIEWER_ID_STORAGE_KEY);
+			if (!id) {
+				const randomBytes = new Uint8Array(32);
+				window.crypto.getRandomValues(randomBytes);
+				id = Array.from(randomBytes, (value) =>
+					value.toString(16).padStart(2, '0'),
+				).join('');
+				window.localStorage.setItem(VIEWER_ID_STORAGE_KEY, id);
+			}
 
 			resolve({
 				username,

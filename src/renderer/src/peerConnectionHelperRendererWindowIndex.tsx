@@ -61,9 +61,22 @@ export function handleIpcRenderer(): void {
 
 		window.electron.ipcRenderer.on(
 			'set-desktop-capturer-source-id',
-			(_, id) => {
-				if (peerConnection) {
-					peerConnection.setDesktopCapturerSourceID(id);
+			async (_, id) => {
+				try {
+					if (!peerConnection) {
+						throw new Error('peer connection is not ready');
+					}
+					await peerConnection.setDesktopCapturerSourceID(id);
+					window.electron.ipcRenderer.send('desktop-capturer-source-ready', {
+						sourceID: id,
+						success: true,
+					});
+				} catch (error) {
+					window.electron.ipcRenderer.send('desktop-capturer-source-ready', {
+						sourceID: id,
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+					});
 				}
 			},
 		);

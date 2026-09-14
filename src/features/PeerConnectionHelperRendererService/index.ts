@@ -42,9 +42,38 @@ export default class RendererWebrtcHelpersService {
 			},
 		});
 
-		helperRendererWindow.loadURL(
-			`file://${this.appPath}/renderer/peerConnectionHelperRendererWindowIndex.html`,
-		);
+		if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+			helperRendererWindow.loadURL(
+				`${process.env.ELECTRON_RENDERER_URL}/peerConnectionHelperRendererWindowIndex.html`,
+			);
+		} else {
+			helperRendererWindow.loadFile(
+				join(
+					this.appPath,
+					'renderer/peerConnectionHelperRendererWindowIndex.html',
+				),
+			);
+		}
+
+		if (is.dev) {
+			helperRendererWindow.webContents.on('console-message', (details) => {
+				if (details.level === 'error' || details.level === 'warning') {
+					console.error(
+						`[helper renderer ${details.level}] ${details.message} (${details.sourceId}:${details.lineNumber})`,
+					);
+				}
+			});
+			helperRendererWindow.webContents.on(
+				'did-fail-load',
+				(_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+					if (isMainFrame) {
+						console.error(
+							`Helper renderer failed to load ${validatedURL}: ${errorCode} ${errorDescription}`,
+						);
+					}
+				},
+			);
+		}
 
 		helperRendererWindow.webContents.on('did-finish-load', () => {
 			if (!helperRendererWindow) {

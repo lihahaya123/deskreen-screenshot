@@ -93,7 +93,7 @@ export default class PeerConnection {
 
 	async setDesktopCapturerSourceID(id: string): Promise<void> {
 		this.desktopCapturerSourceID = id;
-		if (process.env.RUN_MODE === 'test') return;
+		if (import.meta.env.MODE === 'test') return;
 
 		// clear old display size when switching sources to ensure new source uses correct dimensions
 		this.sourceDisplaySize = undefined;
@@ -281,7 +281,7 @@ export default class PeerConnection {
 	}
 
 	callPeer(): void {
-		if (process.env.RUN_MODE === 'test') return;
+		if (import.meta.env.MODE === 'test') return;
 		if (this.isCallStarted) return;
 		this.isCallStarted = true;
 

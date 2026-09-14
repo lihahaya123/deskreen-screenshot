@@ -249,6 +249,9 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 					sessionId,
 				);
 			if (sharingSession) {
+				getDeskreenGlobal().connectedDevicesService.forgetTrustedDevice(
+					sharingSession.deviceID,
+				);
 				getDeskreenGlobal().connectedDevicesService.disconnectDeviceByID(
 					sharingSession.deviceID,
 				);
@@ -280,6 +283,10 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 
 	ipcMain.handle(IpcEvents.DisconnectDeviceById, (_, id) => {
 		getDeskreenGlobal().connectedDevicesService.disconnectDeviceByID(id);
+	});
+
+	ipcMain.handle(IpcEvents.ReleaseDeviceConnection, (_, id) => {
+		getDeskreenGlobal().connectedDevicesService.releaseDeviceConnection(id);
 	});
 
 	ipcMain.handle(IpcEvents.DisconnectAllDevices, () => {
@@ -390,6 +397,11 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 		}
 
 		if (sharingSession !== null) {
+			sharingSession.setDeviceID(pendingDevice.id);
+			connectedDevicesService.trustDevice(
+				pendingDevice.id,
+				sharingSession.desktopCapturerSourceID,
+			);
 			sharingSession.callPeer();
 			sharingSession.setStatus(SharingSessionStatusEnum.SHARING);
 			sharingSessionService.waitingForConnectionSharingSession = null;
@@ -407,17 +419,6 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 
 	ipcMain.handle(IpcEvents.GetPendingConnectionDevice, () => {
 		return getDeskreenGlobal().connectedDevicesService.pendingConnectionDevice;
-	});
-
-	ipcMain.handle(IpcEvents.GetWaitingForConnectionSharingSessionRoomId, () => {
-		if (
-			getDeskreenGlobal().sharingSessionService
-				.waitingForConnectionSharingSession === null
-		) {
-			return undefined;
-		}
-		return getDeskreenGlobal().sharingSessionService
-			.waitingForConnectionSharingSession?.roomID;
 	});
 
 	ipcMain.handle(
@@ -441,7 +442,7 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 	);
 
 	ipcMain.handle(IpcEvents.SetDesktopCapturerSourceId, (_, id) => {
-		getDeskreenGlobal().sharingSessionService.waitingForConnectionSharingSession?.setDesktopCapturerSourceID(
+		return getDeskreenGlobal().sharingSessionService.waitingForConnectionSharingSession?.setDesktopCapturerSourceID(
 			id,
 		);
 	});
