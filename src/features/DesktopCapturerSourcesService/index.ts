@@ -4,7 +4,6 @@
 import { desktopCapturer, DesktopCapturerSource } from 'electron';
 import Logger from '../../main/utils/LoggerWithFilePrefix';
 import DesktopCapturerSourceType from '../../common/DesktopCapturerSourceType';
-import isLinuxWaylandSession from '../../main/utils/isLinuxWaylandSession';
 
 export interface DesktopCapturerSourceWithType {
 	source: import('electron').DesktopCapturerSource;
@@ -39,8 +38,6 @@ class DesktopCapturerSourcesService {
 
 	log = new Logger(__filename);
 
-	autoRefreshEnabled: boolean;
-
 	refreshPromise: Promise<void> | null;
 
 	portalSelectionPromise: Promise<DesktopCapturerSource | null> | null;
@@ -57,31 +54,13 @@ class DesktopCapturerSourcesService {
 			SharingSessionID,
 			SourcesDisappearListener[]
 		>();
-		this.autoRefreshEnabled = !isLinuxWaylandSession;
 		this.refreshPromise = null;
 		this.portalSelectionPromise = null;
-
-		if (this.autoRefreshEnabled) {
-			this.startRefreshDesktopCapturerSourcesLoop();
-		} else {
-			this.log.debug(
-				'skipping desktop capturer auto refresh on wayland session',
-			);
-		}
 		this.startPollForInactiveListenersLoop();
 	}
 
 	getSourcesMap(): Map<string, DesktopCapturerSourceWithType> {
 		return this.sources;
-	}
-
-	startRefreshDesktopCapturerSourcesLoop(): void {
-		if (!this.autoRefreshEnabled) {
-			return;
-		}
-		setInterval(() => {
-			this.refreshDesktopCapturerSources();
-		}, 5000);
 	}
 
 	getScreenSources(): DesktopCapturerSource[] {

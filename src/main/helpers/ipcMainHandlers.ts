@@ -152,6 +152,7 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 		try {
 			const deskreenGlobal = getDeskreenGlobal();
 			if (
+				!deskreenGlobal.connectedDevicesService.isSlotAvailable() ||
 				deskreenGlobal.sharingSessionService
 					.waitingForConnectionSharingSession !== null
 			) {

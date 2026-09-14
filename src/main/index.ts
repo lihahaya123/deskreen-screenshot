@@ -6,10 +6,19 @@ import {
 overrideGlobalConsole();
 startConsoleRateLimiting();
 
-import { app, shell, BrowserWindow, Notification } from 'electron';
+import {
+	app,
+	shell,
+	BrowserWindow,
+	Notification,
+	Menu,
+	nativeImage,
+	Tray,
+} from 'electron';
 import { join } from 'path';
 import { is, optimizer } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import cameraIconAsset from '../../resources/camera-icon.png?asset';
 import { existsSync } from 'node:fs';
 
 // function createWindow(): void {
@@ -111,6 +120,7 @@ const resolvePreloadScriptPath = (entry: 'index' | 'helperRenderer'): string => 
 
 export default class DeskreenApp {
 	mainWindow: BrowserWindow | null = null;
+	tray: Tray | null = null;
 
 	menuBuilder: MenuBuilder | null = null;
 
@@ -139,6 +149,7 @@ export default class DeskreenApp {
 			// start log buffer cleanup to prevent memory bloat
 			startLogBufferCleanup();
 
+			this.createTray();
 			await this.createWindow();
 
 			void this.checkForLatestVersionAndNotify();
@@ -153,7 +164,9 @@ export default class DeskreenApp {
 			// On macOS it's common to re-create a window in the app when the
 			// dock icon is clicked and there are no other windows open.
 			if (this.mainWindow === null) {
-				this.createWindow();
+				void this.createWindow();
+			} else {
+				this.showMainWindow();
 			}
 		});
 
@@ -161,6 +174,59 @@ export default class DeskreenApp {
 			'webrtc-max-cpu-consumption-percentage',
 			'100',
 		);
+	}
+
+	private createCameraIcon(size: number) {
+		const cameraIcon = nativeImage.createFromPath(cameraIconAsset);
+		if (!cameraIcon.isEmpty()) {
+			return cameraIcon.resize({ width: size, height: size, quality: 'best' });
+		}
+
+		console.error('Failed to create camera icon; using the Deskreen icon');
+		return nativeImage
+			.createFromPath(icon)
+			.resize({ width: size, height: size, quality: 'best' });
+	}
+
+	private showMainWindow(): void {
+		if (!this.mainWindow) return;
+		this.mainWindow.setSkipTaskbar(false);
+		if (this.mainWindow.isMinimized()) {
+			this.mainWindow.restore();
+		}
+		this.mainWindow.show();
+		this.mainWindow.focus();
+	}
+
+	private hideMainWindowInTray(): void {
+		if (!this.mainWindow) return;
+		this.mainWindow.hide();
+		this.mainWindow.setSkipTaskbar(true);
+	}
+
+	private updateTrayMenu(): void {
+		if (!this.tray) return;
+		this.tray.setToolTip(i18n.t('deskreen-ce-system-tray'));
+		this.tray.setContextMenu(
+			Menu.buildFromTemplate([
+				{
+					label: 'Deskreen CE',
+					click: () => this.showMainWindow(),
+				},
+				{ type: 'separator' },
+				{
+					label: i18n.t('quit-deskreen-ce'),
+					click: () => app.quit(),
+				},
+			]),
+		);
+	}
+
+	private createTray(): void {
+		if (this.tray) return;
+		this.tray = new Tray(this.createCameraIcon(20));
+		this.updateTrayMenu();
+		this.tray.on('click', () => this.showMainWindow());
 	}
 
 	private async checkForLatestVersionAndNotify(): Promise<void> {
@@ -220,7 +286,7 @@ export default class DeskreenApp {
 			title: 'Deskreen CE',
 			// useContentSize: true,
 			autoHideMenuBar: true,
-			...(process.platform === 'linux' ? { icon } : {}),
+			icon: cameraIconAsset,
 			webPreferences: {
 				preload: resolvePreloadScriptPath('index'),
 				sandbox: false,
@@ -237,12 +303,16 @@ export default class DeskreenApp {
 				throw new Error('"mainWindow" is not defined');
 			}
 			if (process.env.START_MINIMIZED === 'true') {
-				this.mainWindow.minimize();
+				this.hideMainWindowInTray();
 			} else {
-				this.mainWindow.show();
-				this.mainWindow.focus();
+				this.showMainWindow();
 			}
 			// });
+		});
+
+		this.mainWindow.on('minimize', () => {
+			if (process.platform === 'darwin') return;
+			this.hideMainWindowInTray();
 		});
 
 		this.mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -286,6 +356,7 @@ export default class DeskreenApp {
 		});
 
 		i18n.on('languageChanged', (lng) => {
+			this.updateTrayMenu();
 			if (this.mainWindow === null) return;
 			this.menuBuilder = new MenuBuilder(this.mainWindow, i18n);
 			this.menuBuilder.buildMenu();
@@ -313,13 +384,7 @@ export default class DeskreenApp {
 
 		// handle second instance attempts (e.g., clicking taskbar icon on windows)
 		app.on('second-instance', () => {
-			if (this.mainWindow) {
-				if (this.mainWindow.isMinimized()) {
-					this.mainWindow.restore();
-				}
-				this.mainWindow.focus();
-				this.mainWindow.show();
-			}
+			this.showMainWindow();
 		});
 
 		const cliLocalIp = this.parseCliLocalIp();

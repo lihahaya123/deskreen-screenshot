@@ -30,7 +30,7 @@ export default class RendererWebrtcHelpersService {
 		let helperRendererWindow: BrowserWindow | null = null;
 
 		helperRendererWindow = new BrowserWindow({
-			show: is.dev, // show in dev only
+			show: false,
 			webPreferences: {
 				preload: this.resolvePreloadScriptPath('helperRenderer'),
 				// contextIsolation: true,
