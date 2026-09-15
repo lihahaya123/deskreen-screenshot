@@ -4,25 +4,25 @@
  * by Pavlo (Paul) Buidenkov
  * */
 
-import http from 'http';
-import Koa from 'koa';
 import crypto from 'crypto';
-import { Server } from 'socket.io';
-import cors from 'kcors';
-import Router from 'koa-router';
-import koaStatic from 'koa-static';
-import koaSend from 'koa-send';
 import detectPort from 'detect-port';
+import http from 'http';
+import cors from 'kcors';
+import Koa from 'koa';
+import Router from 'koa-router';
+import koaSend from 'koa-send';
+import koaStatic from 'koa-static';
+import { Server } from 'socket.io';
 import config from '../common/config';
-import startPollForInactiveRooms from './startPollForInactiveRooms';
-import Logger from '../main/utils/LoggerWithFilePrefix';
-import SocketsIPService from './socketsIPService';
-import socketIOServerStore from './store/socketIOServerStore';
-import DarkwireSocket from './darkwireSocket';
-import getStore from './store';
 import { getDeskreenGlobal } from '../main/helpers/getDeskreenGlobal';
 import getMyLocalIpV4 from '../main/helpers/getMyLocalIpV4';
+import Logger from '../main/utils/LoggerWithFilePrefix';
+import DarkwireSocket from './darkwireSocket';
 import { getClientViewerDistPath } from './getClientViewerDistPath';
+import SocketsIPService from './socketsIPService';
+import startPollForInactiveRooms from './startPollForInactiveRooms';
+import getStore from './store';
+import socketIOServerStore from './store/socketIOServerStore';
 
 const { hostname, primaryPort, backupPort } = config;
 
@@ -162,9 +162,10 @@ class DeskreenSignalingServer {
 			}
 
 			try {
-				const screenshot = await desktopCapturerSourcesService.captureSourceJPEG(
-					sharingSession.desktopCapturerSourceID,
-				);
+				const screenshot =
+					await desktopCapturerSourcesService.captureSourceJPEG(
+						sharingSession.desktopCapturerSourceID,
+					);
 				ctx.set('Cache-Control', 'no-store');
 				ctx.type = 'image/jpeg';
 				ctx.body = screenshot;
@@ -230,9 +231,7 @@ class DeskreenSignalingServer {
 
 	listenCallback() {
 		return () => {
-			this.log.info(
-				`Deskreen CE signaling server is online at port ${this.port}`,
-			);
+			this.log.info(`haha signaling server is online at port ${this.port}`);
 			this.log.info(
 				`🌐 Server available at http://${this.hostname}:${this.port}`,
 			);

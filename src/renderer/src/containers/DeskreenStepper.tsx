@@ -1,10 +1,3 @@
-// import SuccessStep from '../components/StepsOfStepper/SuccessStep';
-import React, { useState, useCallback, useEffect, ReactNode } from 'react';
-import { makeStyles, createStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import { Row, Col, Grid } from 'react-flexbox-grid';
 import {
 	Button,
 	Dialog,
@@ -16,20 +9,27 @@ import {
 	Spinner,
 	Text,
 } from '@blueprintjs/core';
-import IntermediateStep from '@renderer/components/StepsOfStepper/IntermediateStep';
+import Step from '@material-ui/core/Step';
+import StepLabel from '@material-ui/core/StepLabel';
+import Stepper from '@material-ui/core/Stepper';
+import { createStyles, makeStyles } from '@material-ui/core/styles';
+import AllowConnectionForDeviceAlert from '@renderer/components/AllowConnectionForDeviceAlert';
+import LanguageSelector from '@renderer/components/LanguageSelector';
 import ColorlibConnector from '@renderer/components/StepperPanel/ColorlibConnector';
-import { Device } from '../../../common/Device';
 import ColorlibStepIcon, {
 	StepIconPropsDeskreen,
 } from '@renderer/components/StepperPanel/ColorlibStepIcon';
-import LanguageSelector from '@renderer/components/LanguageSelector';
-import { getShuffledArrayOfHello } from '@renderer/configs/i18next.config.client';
-import { IpcEvents } from '../../../common/IpcEvents.enum';
 import DeviceConnectedInfoButton from '@renderer/components/StepperPanel/DeviceConnectedInfoButton';
-import AllowConnectionForDeviceAlert from '@renderer/components/AllowConnectionForDeviceAlert';
-import { useTranslation } from 'react-i18next';
-import { TFunction } from 'i18next';
+import IntermediateStep from '@renderer/components/StepsOfStepper/IntermediateStep';
+import SuccessStep from '@renderer/components/StepsOfStepper/SuccessStep';
+import { getShuffledArrayOfHello } from '@renderer/configs/i18next.config.client';
 import { showMessageFromNewToaster } from '@renderer/utils/showMessageFromNewToaster';
+import { TFunction } from 'i18next';
+import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import { Col, Grid, Row } from 'react-flexbox-grid';
+import { useTranslation } from 'react-i18next';
+import { Device } from '../../../common/Device';
+import { IpcEvents } from '../../../common/IpcEvents.enum';
 
 const useStyles = makeStyles(() =>
 	createStyles({
@@ -133,20 +133,18 @@ const DeskreenStepper = ({
 	const steps = getSteps(t);
 
 	const handleNext = useCallback((): void => {
-		if (activeStep === steps.length - 1) {
-			setIsEntireScreenSelected(false);
-			setIsApplicationWindowSelected(false);
-		}
 		setActiveStep((prevActiveStep: number): number => prevActiveStep + 1);
-	}, [activeStep, setActiveStep, steps]);
+	}, [setActiveStep]);
 
 	const handleNextEntireScreen = useCallback((): void => {
 		setActiveStep((prevActiveStep: number): number => prevActiveStep + 1);
 		setIsEntireScreenSelected(true);
+		setIsApplicationWindowSelected(false);
 	}, [setActiveStep]);
 
 	const handleNextApplicationWindow = useCallback((): void => {
 		setActiveStep((prevActiveStep: number): number => prevActiveStep + 1);
+		setIsEntireScreenSelected(false);
 		setIsApplicationWindowSelected(true);
 	}, [setActiveStep]);
 
@@ -221,18 +219,24 @@ const DeskreenStepper = ({
 		}, [handleReset, pendingConnectionDevice, t]);
 
 	const renderIntermediateOrSuccessStepContent = useCallback(() => {
-		return (
+		return activeStep === steps.length ? (
+			<div style={{ width: '100%' }}>
+				<Row middle="xs" center="xs">
+					<SuccessStep handleReset={handleReset} />
+				</Row>
+			</div>
+		) : (
 			<div id="intermediate-step-container" style={{ width: '100%' }}>
 				<IntermediateStep
 					activeStep={activeStep}
 					steps={steps}
+					handleNext={handleNext}
 					handleBack={handleBack}
 					handleNextEntireScreen={handleNextEntireScreen}
 					handleNextApplicationWindow={handleNextApplicationWindow}
 					resetPendingConnectionDevice={() => setPendingConnectionDevice(null)}
 					resetUserAllowedConnection={() => setIsUserAllowedConnection(false)}
 					connectedDevice={pendingConnectionDevice}
-					handleReset={handleReset}
 				/>
 			</div>
 		);
@@ -240,6 +244,7 @@ const DeskreenStepper = ({
 		activeStep,
 		steps,
 		handleReset,
+		handleNext,
 		handleBack,
 		handleNextEntireScreen,
 		handleNextApplicationWindow,

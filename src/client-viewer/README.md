@@ -1,3 +1,3 @@
-# Deskreen CE Client-Viewer
+# haha Client Viewer
 
 AGPL-3.0 License © [Pavlo (Paul) Buidenkov](https://github.com/pavlobu/deskreen)

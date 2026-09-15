@@ -1,26 +1,20 @@
-import {
-	ipcMain,
-	BrowserWindow,
-	clipboard,
-	shell,
-	app,
-} from 'electron';
-import i18n from '../configs/i18next.config';
+import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
+import DesktopCapturerSourceType from '../../common/DesktopCapturerSourceType';
+import { store } from '../../common/deskreen-electron-store';
+import { ElectronStoreKeys } from '../../common/ElectronStoreKeys.enum';
+import { IpcEvents } from '../../common/IpcEvents.enum';
 import { ConnectedDevicesService } from '../../features/ConnectedDevicesService';
 import SharingSession from '../../features/SharingSessionService/SharingSession';
-import RoomIDService from '../../server/RoomIDService';
+import SharingSessionStatusEnum from '../../features/SharingSessionService/SharingSessionStatusEnum';
 import { signalingServer } from '../../server';
 import { onDeviceConnectedCallback } from '../../server/onDeviceConnectedCallback';
-import SharingSessionStatusEnum from '../../features/SharingSessionService/SharingSessionStatusEnum';
-import getMyLocalIpV4 from './getMyLocalIpV4';
-import isWifiConnected from './isWifiConnected';
-import { getDeskreenGlobal } from './getDeskreenGlobal';
-import { IpcEvents } from '../../common/IpcEvents.enum';
-import { ElectronStoreKeys } from '../../common/ElectronStoreKeys.enum';
-import { store } from '../../common/deskreen-electron-store';
-import DesktopCapturerSourceType from '../../common/DesktopCapturerSourceType';
+import RoomIDService from '../../server/RoomIDService';
+import i18n from '../configs/i18next.config';
 import isLinuxWaylandSession from '../utils/isLinuxWaylandSession';
 import { checkScreenRecordingPermission } from './checkScreenRecordingPermission';
+import { getDeskreenGlobal } from './getDeskreenGlobal';
+import getMyLocalIpV4 from './getMyLocalIpV4';
+import isWifiConnected from './isWifiConnected';
 
 export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 	ipcMain.on('client-changed-language', async (_, newLangCode) => {
@@ -92,10 +86,6 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 			null;
 		deskreenGlobal.rendererWebrtcHelpersService.helpers.clear();
 		deskreenGlobal.sharingSessionService.sharingSessions.clear();
-	});
-
-	ipcMain.handle('get-latest-version', () => {
-		return getDeskreenGlobal().latestAppVersion;
 	});
 
 	ipcMain.handle('get-current-version', () => {

@@ -1,4 +1,4 @@
-# Deskreen CE：局域网按需屏幕截图分支
+# haha：局域网按需屏幕截图工具
 
 本仓库基于 Deskreen CE 修改，目前的核心用途是：在同一局域网内，通过手机、平板或另一台电脑的浏览器，按需获取运行端电脑的当前屏幕或窗口截图。
 
@@ -63,13 +63,13 @@
 可以通过参数指定界面和二维码使用的局域网地址：
 
 ```powershell
-& 'C:\Program Files\Deskreen CE\Deskreen CE.exe' --ip 192.168.31.68
+& 'C:\Program Files\haha\haha.exe' --ip 192.168.31.68
 ```
 
 也可以使用 `--local-ip`：
 
 ```powershell
-& 'C:\Program Files\Deskreen CE\Deskreen CE.exe' --local-ip 192.168.31.68
+& 'C:\Program Files\haha\haha.exe' --local-ip 192.168.31.68
 ```
 
 该参数只选择程序公布给查看设备的地址，不会修改 Windows 或路由器的网络配置。
@@ -178,7 +178,7 @@ npm run build:unpack
 输出默认位于 `dist` 目录。当前名称配置下，未打包程序通常位于：
 
 ```text
-dist\win-unpacked\Deskreen CE.exe
+dist\win-unpacked\haha.exe
 ```
 
 Windows 构建目标由 `electron-builder.yml` 配置，目前包括：
@@ -244,8 +244,8 @@ Electron 在枚举或获取某个暂时不可用的屏幕/窗口时可能输出�
 
 ## 当前已知遗留项
 
-- 软件名称、部分菜单和内部符号仍沿用 Deskreen CE，暂未进行整体改名。
-- 自动版本检查仍读取上游 Deskreen 发布信息，下载和教程入口仍指向上游网站。
+- 软件对外名称已改为 `haha`；部分内部类名、翻译键和兼容配置文件名仍保留上游命名，不影响显示与运行。
+- 上游 Deskreen 自动版本检查、下载入口和教程入口已移除；发布新版本前需要配置自己的更新地址。
 - 不应使用上游更新安装包直接覆盖当前定制版本，否则本分支修改会丢失。
 - 部分旧多语言翻译词条仍保留，但已经没有对应的实时视频或 Pro 广告运行入口。
 - 构建时仍可能出现大于 500 kB 的分包提示以及主进程混合导出提示，目前不影响运行。

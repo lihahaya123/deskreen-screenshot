@@ -1,10 +1,10 @@
-import { Row, Col } from 'react-flexbox-grid';
-import { useTranslation } from 'react-i18next';
-import { LIGHT_UI_BACKGROUND } from '../../constants/styleConstants';
-import MyDeviceInfoCard from '../../components/MyDeviceInfoCard';
-import type { TFunction } from 'i18next';
 import { Button, H3 } from '@blueprintjs/core';
+import type { TFunction } from 'i18next';
+import { Col, Row } from 'react-flexbox-grid';
+import { useTranslation } from 'react-i18next';
 import ConnectingIndicator from '../../components/ConnectingIndicator';
+import MyDeviceInfoCard from '../../components/MyDeviceInfoCard';
+import { LIGHT_UI_BACKGROUND } from '../../constants/styleConstants';
 import DeskreenLogo from '../../images/deskreen_logo_128x128.png';
 
 interface ConnectionPropmptsProps {
@@ -98,7 +98,7 @@ function ConnectionPropmpts(props: ConnectionPropmptsProps) {
 							>
 								<img
 									src={DeskreenLogo}
-									alt="Deskreen Logo"
+									alt="haha Logo"
 									style={{
 										width: '80px',
 										height: '80px',
@@ -107,7 +107,7 @@ function ConnectionPropmpts(props: ConnectionPropmptsProps) {
 								/>
 							</Row>
 							<Row center="xs">
-								<H3>Deskreen CE Viewer</H3>
+								<H3>haha Viewer</H3>
 							</Row>
 							<Row center="xs" style={{ width: '100%', margin: '0 auto' }}>
 								<Col md={6} xl={4}>

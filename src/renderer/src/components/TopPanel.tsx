@@ -1,11 +1,11 @@
-import React from 'react';
-import { Button, H3, Icon, Position, Tag, Tooltip } from '@blueprintjs/core';
+import { Button, H3, Icon, Position, Tooltip } from '@blueprintjs/core';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
+import React from 'react';
 import { Col, Row } from 'react-flexbox-grid';
-import SettingsOverlay from './SettingsOverlay/SettingsOverlay';
-import ConnectedDevicesListDrawer from './ConnectedDevicesListDrawer';
 import { useTranslation } from 'react-i18next';
 import { IpcEvents } from '../../../common/IpcEvents.enum';
+import ConnectedDevicesListDrawer from './ConnectedDevicesListDrawer';
+import SettingsOverlay from './SettingsOverlay/SettingsOverlay';
 
 const useStyles = makeStyles(() =>
 	createStyles({
@@ -51,11 +51,6 @@ const useStyles = makeStyles(() =>
 			cursor: 'default !important',
 			position: 'relative',
 		},
-		updateBadge: {
-			borderRadius: '12px',
-			cursor: 'pointer',
-			boxShadow: 'none',
-		},
 		topPanelIconOfControlButton: {
 			cursor: 'default !important',
 		},
@@ -92,8 +87,6 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 	const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 	const [isConnectedDevicesDrawerOpen, setIsConnectedDevicesDrawerOpen] =
 		React.useState(false);
-	const [latestVersion, setLatestVersion] = React.useState('');
-	const [currentVersion, setCurrentVersion] = React.useState('');
 	const [connectedDevicesCount, setConnectedDevicesCount] = React.useState(0);
 
 	const handleSettingsOpen = React.useCallback(() => {
@@ -107,37 +100,6 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 	const handleToggleConnectedDevicesListDrawer = React.useCallback(() => {
 		setIsConnectedDevicesDrawerOpen(!isConnectedDevicesDrawerOpen);
 	}, [isConnectedDevicesDrawerOpen]);
-
-	const handleTutorialButtonClick = React.useCallback(() => {
-		window.electron.ipcRenderer.invoke(
-			IpcEvents.OpenExternalLink,
-			'https://deskreen.com/howto',
-		);
-	}, []);
-
-	const handleOpenDownloadPage = React.useCallback((): void => {
-		void window.electron.ipcRenderer.invoke(
-			IpcEvents.OpenExternalLink,
-			'https://deskreen.com/download',
-		);
-	}, []);
-
-	React.useEffect(() => {
-		const fetchVersions = async (): Promise<void> => {
-			const [latest, current] = await Promise.all([
-				window.electron.ipcRenderer.invoke('get-latest-version'),
-				window.electron.ipcRenderer.invoke('get-current-version'),
-			]);
-			if (typeof latest === 'string') {
-				setLatestVersion(latest);
-			}
-			if (typeof current === 'string') {
-				setCurrentVersion(current);
-			}
-		};
-
-		void fetchVersions();
-	}, []);
 
 	React.useEffect(() => {
 		const fetchConnectedDevicesCount = async (): Promise<void> => {
@@ -165,11 +127,6 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 		};
 	}, []);
 
-	const hasUpdate =
-		latestVersion !== '' &&
-		currentVersion !== '' &&
-		latestVersion !== currentVersion;
-
 	const renderConnectedDevicesListButton = (
 		<div className={classes.topPanelControlButtonMargin}>
 			<Tooltip content={t('connected-devices')} position={Position.BOTTOM}>
@@ -191,24 +148,6 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 					{connectedDevicesCount}
 				</span>
 			)}
-		</div>
-	);
-
-	const renderTutorialButton = (
-		<div className={classes.topPanelControlButtonMargin}>
-			<Tooltip content={t('tutorial')} position={Position.BOTTOM}>
-				<Button
-					id="top-panel-tutorial-button"
-					className={classes.topPanelControlButton}
-					onClick={handleTutorialButtonClick}
-				>
-					<Icon
-						className={classes.topPanelIconOfControlButton}
-						icon="learning"
-						size={22}
-					/>
-				</Button>
-			</Tooltip>
 		</div>
 	);
 
@@ -260,7 +199,7 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 			id="logo-with-popover-visit-website"
 			className={classes.logoWithAppName}
 		>
-			<H3>Deskreen Community Edition</H3>
+			<H3>haha</H3>
 		</div>
 	);
 
@@ -274,28 +213,8 @@ export default function TopPanel({ handleReset }: Props): React.ReactElement {
 					<div className={classes.topPanelControlButtonsRoot}>
 						{renderConnectedDevicesListButton}
 						{renderHelpButton}
-						{renderTutorialButton}
 						{renderSettingsButton}
 					</div>
-					{hasUpdate ? (
-						<Tag
-							minimal
-							intent="success"
-							round
-							className={classes.updateBadge}
-							role="button"
-							onClick={handleOpenDownloadPage}
-							onKeyDown={(event) => {
-								if (event.key === 'Enter' || event.key === ' ') {
-									event.preventDefault();
-									handleOpenDownloadPage();
-								}
-							}}
-							tabIndex={0}
-						>
-							{t('new-version-available')}
-						</Tag>
-					) : null}
 				</div>
 			</div>
 			{isSettingsOpen ? (

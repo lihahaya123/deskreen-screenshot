@@ -1,4 +1,4 @@
-import { Callout, Card, H3, Text, Tooltip, Position } from '@blueprintjs/core';
+import { Callout, Card, H3, Position, Text, Tooltip } from '@blueprintjs/core';
 import { useTranslation } from 'react-i18next';
 import { LIGHT_UI_BACKGROUND } from '../../constants/styleConstants';
 
@@ -25,7 +25,7 @@ function MyDeviceInfoCard(props: MyDeviceDetailsCardProps) {
 				<Text>{`${t('Device Type')}: ${myDeviceType}`}</Text>
 				<Tooltip
 					content={t(
-						'Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running',
+						'Your Device IP should match with Device IP in alert popup appeared on your computer, where haha is running',
 					)}
 					position={Position.TOP}
 				>
@@ -47,7 +47,7 @@ function MyDeviceInfoCard(props: MyDeviceDetailsCardProps) {
 			</Callout>
 			<Text className="bp3-text-muted">
 				{t(
-					'These details should match with the ones that you see in alert popup on computer screen, where Deskreen-CE is running',
+					'These details should match with the ones that you see in alert popup on computer screen, where haha is running',
 				)}
 			</Text>
 		</Card>

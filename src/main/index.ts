@@ -3,23 +3,16 @@ import {
 	overrideGlobalConsole,
 	startConsoleRateLimiting,
 } from '../common/rateLimitedConsole';
+
 overrideGlobalConsole();
 startConsoleRateLimiting();
 
-import {
-	app,
-	shell,
-	BrowserWindow,
-	Notification,
-	Menu,
-	nativeImage,
-	Tray,
-} from 'electron';
-import { join } from 'path';
-import { is, optimizer } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
-import cameraIconAsset from '../../resources/camera-icon.png?asset';
 import { existsSync } from 'node:fs';
+import { is, optimizer } from '@electron-toolkit/utils';
+import { app, BrowserWindow, Menu, nativeImage, shell, Tray } from 'electron';
+import { join } from 'path';
+import cameraIconAsset from '../../resources/camera-icon.png?asset';
+import icon from '../../resources/icon.png?asset';
 
 // function createWindow(): void {
 //   // Create the browser window.
@@ -94,19 +87,19 @@ import { existsSync } from 'node:fs';
 // import path from 'path';
 // import { app, BrowserWindow } from 'electron';
 import { store } from '../common/deskreen-electron-store';
+import { ElectronStoreKeys } from '../common/ElectronStoreKeys.enum';
+import { signalingServer } from '../server';
 // import i18n from './i18next.config';
 import i18n from './configs/i18next.config';
-import { signalingServer } from '../server';
+import { initGlobals } from './helpers/initGlobals';
+import { initIpcMainHandlers } from './helpers/ipcMainHandlers';
 import MenuBuilder from './menu';
 import installExtensions from './utils/installExtensions';
-import getNewVersionTag from './utils/getNewVersionTag';
-import { initIpcMainHandlers } from './helpers/ipcMainHandlers';
-import { initGlobals } from './helpers/initGlobals';
-import { ElectronStoreKeys } from '../common/ElectronStoreKeys.enum';
-import { getDeskreenGlobal } from './helpers/getDeskreenGlobal';
 import { startLogBufferCleanup } from './utils/LoggerWithFilePrefix';
 
-const resolvePreloadScriptPath = (entry: 'index' | 'helperRenderer'): string => {
+const resolvePreloadScriptPath = (
+	entry: 'index' | 'helperRenderer',
+): string => {
 	const baseDir = join(__dirname, '../preload');
 	const candidates = [`${entry}.js`, `${entry}.mjs`, `${entry}.cjs`];
 	for (const fileName of candidates) {
@@ -124,8 +117,6 @@ export default class DeskreenApp {
 
 	menuBuilder: MenuBuilder | null = null;
 
-	latestAppVersion = '';
-
 	initElectronAppObject(): void {
 		/**
 		 * Add event listeners...
@@ -141,7 +132,7 @@ export default class DeskreenApp {
 		});
 
 		app.whenReady().then(async () => {
-			app.setAppUserModelId('com.deskreen-ce.app');
+			app.setAppUserModelId('com.haha.app');
 			if (process.platform === 'darwin') {
 				app.setActivationPolicy('regular');
 			}
@@ -151,8 +142,6 @@ export default class DeskreenApp {
 
 			this.createTray();
 			await this.createWindow();
-
-			void this.checkForLatestVersionAndNotify();
 		});
 
 		app.on('browser-window-created', (_, window) => {
@@ -182,7 +171,7 @@ export default class DeskreenApp {
 			return cameraIcon.resize({ width: size, height: size, quality: 'best' });
 		}
 
-		console.error('Failed to create camera icon; using the Deskreen icon');
+		console.error('Failed to create camera icon; using the haha icon');
 		return nativeImage
 			.createFromPath(icon)
 			.resize({ width: size, height: size, quality: 'best' });
@@ -210,7 +199,7 @@ export default class DeskreenApp {
 		this.tray.setContextMenu(
 			Menu.buildFromTemplate([
 				{
-					label: 'Deskreen CE',
+					label: 'haha',
 					click: () => this.showMainWindow(),
 				},
 				{ type: 'separator' },
@@ -227,43 +216,6 @@ export default class DeskreenApp {
 		this.tray = new Tray(this.createCameraIcon(20));
 		this.updateTrayMenu();
 		this.tray.on('click', () => this.showMainWindow());
-	}
-
-	private async checkForLatestVersionAndNotify(): Promise<void> {
-		try {
-			const latestAppVersion = await getNewVersionTag();
-			const deskreenGlobal = getDeskreenGlobal();
-			deskreenGlobal.latestAppVersion = latestAppVersion;
-			this.latestAppVersion = latestAppVersion;
-
-			if (
-				latestAppVersion === '' ||
-				latestAppVersion === deskreenGlobal.currentAppVersion ||
-				!Notification.isSupported()
-			) {
-				return;
-			}
-
-			this.showUpdateNotification(latestAppVersion);
-		} catch (error) {
-			console.error('Failed to check for Deskreen updates', error);
-		}
-	}
-
-	private showUpdateNotification(latestAppVersion: string): void {
-		const deskreenGlobal = getDeskreenGlobal();
-		const notification = new Notification({
-			title: i18n.t('deskreen-ce-update-is-available'),
-			body: `${i18n.t('your-current-version-is')} ${deskreenGlobal.currentAppVersion} | ${i18n.t(
-				'click-to-download-new-updated-version',
-			)} ${latestAppVersion}`,
-		});
-
-		notification.on('click', () => {
-			void shell.openExternal('https://deskreen.com/download');
-		});
-
-		notification.show();
 	}
 
 	async createWindow(): Promise<void> {
@@ -283,7 +235,7 @@ export default class DeskreenApp {
 			titleBarStyle: 'hiddenInset',
 			frame: process.platform === 'darwin' ? false : true,
 			useContentSize: true,
-			title: 'Deskreen CE',
+			title: 'haha',
 			// useContentSize: true,
 			autoHideMenuBar: true,
 			icon: cameraIconAsset,

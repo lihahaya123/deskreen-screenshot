@@ -1,10 +1,4 @@
-import {
-	Menu,
-	shell,
-	BrowserWindow,
-	MenuItemConstructorOptions,
-	app,
-} from 'electron';
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions } from 'electron';
 
 import i18nType from './configs/i18next.config';
 
@@ -57,7 +51,7 @@ export default class MenuBuilder {
 
 	buildDarwinTemplate(): MenuItemConstructorOptions[] {
 		const subMenuAbout: DarwinMenuItemConstructorOptions = {
-			label: 'Deskreen CE',
+			label: 'haha',
 			submenu: [
 				{
 					label: this.i18n.t('about-deskreen'),
@@ -179,46 +173,12 @@ export default class MenuBuilder {
 				},
 			],
 		};
-		const subMenuHelp: MenuItemConstructorOptions = {
-			label: this.i18n.t('help'),
-			submenu: [
-				{
-					label: this.i18n.t('learn-more'),
-					click() {
-						shell.openExternal('https://www.deskreen.com');
-					},
-				},
-				// {
-				//   label: this.i18n.t('Documentation'),
-				//   click() {
-				//     shell.openExternal(
-				//       'https://github.com/pavlobu/deskreen/blob/master/README.md'
-				//     );
-				//   },
-				// },
-				// {
-				//   label: this.i18n.t('Community Discussions'),
-				//   click() {
-				//     shell.openExternal(
-				//       'https://github.com/pavlobu/deskreen/discussions'
-				//     );
-				//   },
-				// },
-				// {
-				//   label: this.i18n.t('Search Issues'),
-				//   click() {
-				//     shell.openExternal('https://github.com/pavlobu/deskreen/issues');
-				//   },
-				// },
-			],
-		};
-
 		const subMenuView =
 			process.env.NODE_ENV === 'development' ||
 			process.env.DEBUG_PROD === 'true'
 				? subMenuViewDev
 				: subMenuViewProd;
 
-		return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow, subMenuHelp];
+		return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow];
 	}
 }

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
 	Button,
 	Classes,
@@ -9,6 +8,7 @@ import {
 	HTMLSelect,
 	Icon,
 } from '@blueprintjs/core';
+import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-flexbox-grid';
 import { useTranslation } from 'react-i18next';
 import i18nInstance from '../../config/i18n';
@@ -240,7 +240,7 @@ function PrivacyConsentDialog(props: PrivacyConsentDialogProps) {
 						className={Classes.TEXT_MUTED}
 						style={{ textAlign: 'right', margin: 0 }}
 					>
-						{t('Privacy Notice: Analytics in Deskreen CE Viewer')}
+						{t('Privacy Notice: Analytics in haha Viewer')}
 					</H3>
 				</Col>
 			</Row>
