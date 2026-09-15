@@ -21,11 +21,6 @@ win:
   target:
     - portable
     - msi
-  azureSignOptions:
-    publisherName: "SERVICES DE DÉVELOPPEMENT DE LOGICIELS EFFICACES"
-    endpoint: "https://eus.codesigning.azure.net/"
-    codeSigningAccountName: "deskreen-web-app"
-    certificateProfileName: "DeskreenPro"
 nsis: null
 mac:
   artifactName: ${name}-${version}-${arch}.${ext}
